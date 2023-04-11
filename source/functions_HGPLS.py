@@ -365,7 +365,7 @@ def train(model: torch.nn.Module, optimizer, loss_metric, trainloader, device):
         num_graph += len(batch_labels)
         batch_graphs = batch_graphs.to(device)
         batch_labels = batch_labels.long().to(device)
-        out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32))
+        out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float64))
         loss = loss_metric(out, batch_labels)
         loss.backward()
         optimizer.step()
