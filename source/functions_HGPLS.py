@@ -338,7 +338,7 @@ def net_graph(features, couples, edg_feat):
     return G
 
 
-def train(model: torch.nn.Module, optimizer, loss_metric, trainloader, device):
+def train(model: torch.nn.Module, optimizer, loss_metric, trainloader, device, e_feat=None):
     """
     Train the given model with the input dataloader
 
@@ -365,7 +365,10 @@ def train(model: torch.nn.Module, optimizer, loss_metric, trainloader, device):
         num_graph += len(batch_labels)
         batch_graphs = batch_graphs.to(device)
         batch_labels = batch_labels.long().to(device)
-        out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32))
+        if e_feat is None:
+            out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32))
+        else:
+            out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32), batch_graphs.edata["type"].to(dtype=torch.float32))
         loss = loss_metric(out, batch_labels)
         loss.backward()
         optimizer.step()
@@ -379,7 +382,7 @@ def train(model: torch.nn.Module, optimizer, loss_metric, trainloader, device):
 
 
 @torch.no_grad()
-def test(model: torch.nn.Module, loss_metric, loader, device):
+def test(model: torch.nn.Module, loss_metric, loader, device, e_feat=None):
     """
     Test the given model on the input dataloader
 
@@ -404,7 +407,10 @@ def test(model: torch.nn.Module, loss_metric, loader, device):
         num_graphs += batch_labels.size(0)
         batch_graphs = batch_graphs.to(device)
         batch_labels = batch_labels.long().to(device)
-        out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32))
+        if e_feat is None:
+            out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32))
+        else:
+            out = model(batch_graphs, batch_graphs.ndata["feature"].to(dtype=torch.float32), batch_graphs.edata["type"].to(dtype=torch.float32))
         pred = out.argmax(dim=1)
         loss += loss_metric(out, batch_labels).item()
         correct += pred.eq(batch_labels).sum().item()
